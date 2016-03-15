@@ -12,10 +12,16 @@ import javax.swing.JFrame;
 
 public class GluttonousSnake extends JFrame {
     public static final int WIDTH = 800, HEIGHT = 600;
-    public static final L = 1, R = 2, U = 3, D = 4;
+    public static final int L = 1, R = 2, U = 3, D = 4;
+
+    // 设置速度
     public static int SLEEPTIME = 60;
+
     BufferedImage offersetImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
+    // 边框
     public static Rectangle rect = new Rectangle(20, 40, 15 * 50, 15 * 35);
+    public static int Gap2Rect = 20;
+
     Snake snake;
     Node node;
 
@@ -28,48 +34,48 @@ public class GluttonousSnake extends JFrame {
                 System.out.println(arg0.getKeyCode());
                 switch (arg0.getKeyCode()) {
                     case KeyEvent.VK_LEFT:
-                        if (snake.dir == L) {
-                            if (SLEEPTIME > 50) {
-                                SLEEPTIME -= 10;
-                            }
-                        } else if (snake.dir == R) {
-                            SLEEPTIME += 10;
-                        } else {
-                            snake.dir = L;
+                    if (snake.dir == L) {
+                        if (SLEEPTIME > 50) {
+                            SLEEPTIME -= 10;
                         }
-                        break;
+                    } else if (snake.dir == R) {
+                        SLEEPTIME += 10;
+                    } else {
+                        snake.dir = L;
+                    }
+                    break;
                     case KeyEvent.VK_RIGHT:
-                        if (snake.dir == R) {
-                            if (SLEEPTIME > 50) {
-                                SLEEPTIME -= 10;
-                            }
-                        } else if (snake.dir == L) {
-                            SLEEPTIME += 10;
-                        } else {
-                            snake.dir = R;
+                    if (snake.dir == R) {
+                        if (SLEEPTIME > 50) {
+                            SLEEPTIME -= 10;
                         }
-                        break;
+                    } else if (snake.dir == L) {
+                        SLEEPTIME += 10;
+                    } else {
+                        snake.dir = R;
+                    }
+                    break;
                     case KeyEvent.VK_UP:
-                        if (snake.dir == U) {
-                            if (SLEEPTIME > 50) {
-                                SLEEPTIME -= 10;
-                            }
-                        } else if (snake.dir == D) {
-                            SLEEPTIME += 10;
-                        } else {
-                            snake.dir = U;
+                    if (snake.dir == U) {
+                        if (SLEEPTIME > 50) {
+                            SLEEPTIME -= 10;
                         }
-                        break;
+                    } else if (snake.dir == D) {
+                        SLEEPTIME += 10;
+                    } else {
+                        snake.dir = U;
+                    }
+                    break;
                     case KeyEvent.VK_DOWN:
-                        if (snake.dir == D) {
-                            if (SLEEPTIME > 50) {
-                                SLEEPTIME -= 10;
-                            }
-                        } else if (snake.dir == U) {
-                            SLEEPTIME += 10;
-                        } else {
-                            snake.dir = D;
+                    if (snake.dir == D) {
+                        if (SLEEPTIME > 50) {
+                            SLEEPTIME -= 10;
                         }
+                    } else if (snake.dir == U) {
+                        SLEEPTIME += 10;
+                    } else {
+                        snake.dir = D;
+                    }
                 }
             }
         });
@@ -90,11 +96,11 @@ public class GluttonousSnake extends JFrame {
         g2d.fillRect(0, 0, WIDTH, HEIGHT);
         g2d.setColor(Color.black);
         g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
-        int result = snake.hit(node);
-        if (result == 1) {
+        if (snake.hitNode(node)) {
+            snake.addNode();
             createNode();
         }
-        if (snake.hitWall() || result == -1) {
+        if (snake.hitSelf() || snake.hitWall()) {
             fuck();
         }
         snake.draw(g2d);
@@ -115,16 +121,31 @@ public class GluttonousSnake extends JFrame {
         }
     }
 
+    /**
+     * 随机生成一个彩色节点
+     * @author piratf
+     */
     public void createNode() {
-        Color color = new Color((int) (Math.random() * 256), (int) (Math.random() * 256),
-                (int) (Math.random() * 256));
-        while (color == this.getBackground())
-            color = new Color((int) (Math.random() * 256), (int) (Math.random() * 256),
-                    (int) (Math.random() * 256));
-        int x = (int) (Math.random() * (rect.width) + rect.x),
-                y = (int) (Math.random() * (rect.height) + rect.y);
+
+        Color color = getRandomColor();
+        int x = (int) (Math.random() * (rect.width - Gap2Rect) + rect.x + Gap2Rect),
+        y = (int) (Math.random() * (rect.height - Gap2Rect) + rect.y + Gap2Rect);
         System.out.println(color.toString() + ' ' + x + ' ' + y);
         node = new Node(x, y, color);
+    }
+
+    /**
+     * 生成一个和背景不同的随机颜色
+     * @author piratf
+     * @return 节点颜色
+     */
+    private Color getRandomColor() {
+        Color color = new Color((int) (Math.random() * 256), (int) (Math.random() * 256),
+            (int) (Math.random() * 256));
+        while (color == this.getBackground())
+            color = new Color((int) (Math.random() * 256), (int) (Math.random() * 256),
+                (int) (Math.random() * 256));
+        return color;
     }
 
     public static void main(String args[]) {
@@ -134,6 +155,7 @@ public class GluttonousSnake extends JFrame {
 
 class Node {
     int x, y, width = 15, height = 15;
+    public static Color NA_color = Color.black;
     Color color;
 
     public Node(int x, int y, Color color) {
@@ -144,7 +166,11 @@ class Node {
     public Node(int x, int y) {
         this.x = x;
         this.y = y;
-        this.color = Color.black;
+        this.color = NA_color;
+    }
+
+    public Rectangle getSmallerRect() {
+        return new Rectangle(x + 1, y - 1, width - 1, height - 1);
     }
 
     public void draw(Graphics2D g2d) {
@@ -158,7 +184,7 @@ class Node {
 
     public boolean hitWall() {
         return x <= 0 || y <= 0 || x + width >= GluttonousSnake.rect.width + GluttonousSnake.rect.x ||
-                y + height >= GluttonousSnake.rect.height + GluttonousSnake.rect.y;
+        y + height >= GluttonousSnake.rect.height + GluttonousSnake.rect.y;
     }
 }
 
@@ -173,29 +199,46 @@ class Snake {
         addNode();
     }
 
-    public int hit(Node node) {
-        for (Node node1 : nodes) {
-            if (node1.getRect().intersects(node.getRect())) {
-                addNode();
-                return 1;
-            }
-            if (nodes.size() > 5) {
+    /**
+     * 自己和自己撞
+     * @author piratf
+     * @return true if hit
+     */
+    public boolean hitSelf() {
+        if (nodes.size() > 5) {
+            for (Node node1 : nodes) {
                 for (Node node2 : nodes) {
-                    if (new Rectangle(node1.getRect().width-1, node1.getRect
-                            ().height-1)
-                            .intersects(node2
-                            .getRect())) {
-                        return -1;
+                    if (node2 != node1 && node1.getSmallerRect().intersects(node2.getSmallerRect())) {
+                        System.out.println("you hit yourself!");
+                        return true;
                     }
                 }
             }
         }
-        return 0;
+        return false;
+    }
+
+    /**
+     * 判断碰撞
+     * @author piratf
+     * @param  node 起始节点
+     * @return      1: 节点和蛇碰撞
+     *              0: 节点没有和蛇碰撞
+     */
+    public boolean hitNode(Node node) {
+        for (Node node1 : nodes) {
+            if (node1.getRect().intersects(node.getRect())) {
+                System.out.println("Bingo!");
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean hitWall() {
         for (Node node : nodes) {
             if (node.hitWall()) {
+                System.out.println("got the wall!");
                 return true;
             }
         }
@@ -218,31 +261,31 @@ class Snake {
         Node nodeTempNode = nodes.get(0);
         switch (dir) {
             case GluttonousSnake.L:
-                if (nodeTempNode.x <= 20) {
-                    nodeTempNode = new Node(20 + 15 * 50, nodeTempNode.y);
-                }
-                nodes.add(0, new Node(nodeTempNode.x - nodeTempNode.width,
-                        nodeTempNode.y));
-                break;
+            if (nodeTempNode.x <= 20) {
+                nodeTempNode = new Node(20 + 15 * 50, nodeTempNode.y);
+            }
+            nodes.add(0, new Node(nodeTempNode.x - nodeTempNode.width,
+                nodeTempNode.y));
+            break;
             case GluttonousSnake.R:
-                if (nodeTempNode.x >= 20 + 15 * 50 - nodeTempNode.width) {
-                    nodeTempNode = new Node(20 - nodeTempNode.width, nodeTempNode.y);
-                }
-                nodes.add(0, new Node(nodeTempNode.x + nodeTempNode.width,
-                        nodeTempNode.y));
-                break;
+            if (nodeTempNode.x >= 20 + 15 * 50 - nodeTempNode.width) {
+                nodeTempNode = new Node(20 - nodeTempNode.width, nodeTempNode.y);
+            }
+            nodes.add(0, new Node(nodeTempNode.x + nodeTempNode.width,
+                nodeTempNode.y));
+            break;
             case GluttonousSnake.U:
-                if (nodeTempNode.y <= 40) {
-                    nodeTempNode = new Node(nodeTempNode.x, 40 + 15 * 35);
-                }
-                nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y - nodeTempNode.height));
-                break;
+            if (nodeTempNode.y <= 40) {
+                nodeTempNode = new Node(nodeTempNode.x, 40 + 15 * 35);
+            }
+            nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y - nodeTempNode.height));
+            break;
             case GluttonousSnake.D:
-                if (nodeTempNode.y >= 40 + 15 * 35 - nodeTempNode.height) {
-                    nodeTempNode = new Node(nodeTempNode.x, 40 - nodeTempNode.height);
-                }
-                nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y + nodeTempNode.height));
-                break;
+            if (nodeTempNode.y >= 40 + 15 * 35 - nodeTempNode.height) {
+                nodeTempNode = new Node(nodeTempNode.x, 40 - nodeTempNode.height);
+            }
+            nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y + nodeTempNode.height));
+            break;
         }
     }
 }
