@@ -11,15 +11,16 @@ import java.util.Random;
 import javax.swing.JFrame;
 
 public class GluttonousSnake extends JFrame {
-    public static final int WIDTH = 800, HEIGHT = 600;
+    public static final int Spacing = 15;
+    public static final int WIDTH = 15 * 55, HEIGHT = 600;
     public static final int L = 1, R = 2, U = 3, D = 4;
 
-    // 设置速度
+    // 设置初始速度
     public static int SLEEPTIME = 60;
 
     BufferedImage offersetImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
     // 边框
-    public static Rectangle rect = new Rectangle(20, 40, 15 * 50, 15 * 35);
+    public static Rectangle theGreateWall = new Rectangle(Spacing, 3 * Spacing, WIDTH - 2 *Spacing, HEIGHT - (6 * Spacing));
     public static int Gap2Rect = 20;
 
     Snake snake;
@@ -27,7 +28,7 @@ public class GluttonousSnake extends JFrame {
 
     public GluttonousSnake() {
         snake = new Snake(this);
-        createNode();
+        createApple();
         this.setBounds(100, 100, WIDTH, HEIGHT);
         this.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent arg0) {
@@ -90,15 +91,19 @@ public class GluttonousSnake extends JFrame {
         System.exit(0);
     }
 
+    public void paintWall(Graphics2D g2d) {
+        g2d.setColor(Color.black);
+        g2d.drawRect(theGreateWall.x, theGreateWall.y, theGreateWall.width, theGreateWall.height);
+    }
+
     public void paint(Graphics g) {
         Graphics2D g2d = (Graphics2D) offersetImage.getGraphics();
         g2d.setColor(Color.white);
         g2d.fillRect(0, 0, WIDTH, HEIGHT);
-        g2d.setColor(Color.black);
-        g2d.drawRect(rect.x, rect.y, rect.width, rect.height);
+        paintWall(g2d);
         if (snake.hitNode(node)) {
             snake.addNode();
-            createNode();
+            createApple();
         }
         if (snake.hitSelf() || snake.hitWall()) {
             fuck();
@@ -108,28 +113,16 @@ public class GluttonousSnake extends JFrame {
         g.drawImage(offersetImage, 0, 0, null);
     }
 
-    class ThreadUpadte implements Runnable {
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(SLEEPTIME);
-                    repaint();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     /**
      * 随机生成一个彩色节点
      * @author piratf
      */
-    public void createNode() {
-
+    public void createApple() {
         Color color = getRandomColor();
-        int x = (int) (Math.random() * (rect.width - Gap2Rect) + rect.x + Gap2Rect),
-        y = (int) (Math.random() * (rect.height - Gap2Rect) + rect.y + Gap2Rect);
+        int x = (int) (Math.random() * (theGreateWall.width - Gap2Rect) + theGreateWall.x + Gap2Rect),
+        y = (int) (Math.random() * (theGreateWall.height - Gap2Rect) + theGreateWall.y + Gap2Rect);
+        x = x / Spacing * Spacing;
+        y = y / Spacing * Spacing;
         System.out.println(color.toString() + ' ' + x + ' ' + y);
         node = new Node(x, y, color);
     }
@@ -151,10 +144,23 @@ public class GluttonousSnake extends JFrame {
     public static void main(String args[]) {
         new GluttonousSnake();
     }
+
+    class ThreadUpadte implements Runnable {
+        public void run() {
+            while (true) {
+                try {
+                    Thread.sleep(SLEEPTIME);
+                    repaint();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }
 
 class Node {
-    int x, y, width = 15, height = 15;
+    int x, y, width = GluttonousSnake.Spacing, height = GluttonousSnake.Spacing;
     public static Color NA_color = Color.black;
     Color color;
 
@@ -183,8 +189,9 @@ class Node {
     }
 
     public boolean hitWall() {
-        return x <= 0 || y <= 0 || x + width >= GluttonousSnake.rect.width + GluttonousSnake.rect.x ||
-        y + height >= GluttonousSnake.rect.height + GluttonousSnake.rect.y;
+        Rectangle wall = GluttonousSnake.theGreateWall;
+        return x < wall.x || y < wall.y || x + width > wall.width + wall.x ||
+        y + height > wall.height + wall.y;
     }
 }
 
