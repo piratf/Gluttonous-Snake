@@ -33,7 +33,7 @@ public class GluttonousSnake extends JFrame {
     int m_score = 0;
     boolean gameOverFlag = false;
 
-    // 
+    // 蛇和苹果
     Snake snake;
     Node apple;
 
@@ -96,7 +96,6 @@ public class GluttonousSnake extends JFrame {
         this.setVisible(true);
         m_scoreFont = new Font("Yahei Consolas Hybrid", Font.PLAIN, 32);
         run();
-        // new Thread(new ThreadUpadte()).start();
     }
 
     private void drawGameOver() {
@@ -205,19 +204,6 @@ public class GluttonousSnake extends JFrame {
                 repaint();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
-        }
-    }
-
-    class ThreadUpadte implements Runnable {
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(SLEEPTIME);
-                    repaint();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }
