@@ -2,7 +2,11 @@
 
 ---
 
-usage: `java GluttonousSnake`
+usage: 
+
+> + 编译： `javac -encoding UTF-8 -d . GluttonousSnake`
+> + 运行： `java -encoding UTF-8 GluttonousSnake`
+
 
 ---
 
