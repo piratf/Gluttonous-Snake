@@ -1,7 +1,9 @@
+import java.awt.Font;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -12,19 +14,28 @@ import javax.swing.JFrame;
 
 public class GluttonousSnake extends JFrame {
     public static final int Spacing = 15;
-    public static final int WIDTH = 15 * 55, HEIGHT = 600;
+    public static final int WIDTH = 15 * 55, HEIGHT = 15 * 40;
     public static final int L = 1, R = 2, U = 3, D = 4;
 
     // 设置初始速度
     public static int SLEEPTIME = 60;
 
+    // 使用双缓冲
     BufferedImage offersetImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
     // 边框
-    public static Rectangle theGreateWall = new Rectangle(Spacing, 3 * Spacing, WIDTH - 2 *Spacing, HEIGHT - (6 * Spacing));
+    public static final Rectangle theGreateWall = new Rectangle(Spacing, 3 * Spacing, WIDTH - 2 *Spacing, HEIGHT - (6 * Spacing));
+    public static final int ScorePosX = theGreateWall.width - 200;
+    public static final int ScorePosY = theGreateWall.y + 50;
     public static int Gap2Rect = 20;
 
+    // 得分记录相关
+    Font m_scoreFont;
+    int m_score = 0;
+    boolean gameOverFlag = false;
+
+    // 
     Snake snake;
-    Node node;
+    Node apple;
 
     public GluttonousSnake() {
         snake = new Snake(this);
@@ -83,11 +94,25 @@ public class GluttonousSnake extends JFrame {
         this.setTitle("Gluttonous Snake");
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setVisible(true);
-        new Thread(new ThreadUpadte()).start();
+        m_scoreFont = new Font("Yahei Consolas Hybrid", Font.PLAIN, 32);
+        run();
+        // new Thread(new ThreadUpadte()).start();
     }
 
-    public void fuck() {
-        System.out.println("You are fucked");
+    private void drawGameOver() {
+        Graphics2D g2d = (Graphics2D) offersetImage.getGraphics();
+        drawScore(g2d, "Aha");
+        g2d.drawImage(offersetImage, 0, 0, null);
+    }
+
+    public void gameOver() {
+        System.out.println("Good Game, and in case I don't see ya, good afternoon, good evening, and good night! ");
+        repaint();
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         System.exit(0);
     }
 
@@ -96,21 +121,49 @@ public class GluttonousSnake extends JFrame {
         g2d.drawRect(theGreateWall.x, theGreateWall.y, theGreateWall.width, theGreateWall.height);
     }
 
-    public void paint(Graphics g) {
-        Graphics2D g2d = (Graphics2D) offersetImage.getGraphics();
-        g2d.setColor(Color.white);
-        g2d.fillRect(0, 0, WIDTH, HEIGHT);
-        paintWall(g2d);
-        if (snake.hitNode(node)) {
-            snake.addNode();
+    public void checkNode() {
+        if (snake.hitNode(apple)) {
+            ++m_score;
+            snake.addNodeFront();
             createApple();
         }
         if (snake.hitSelf() || snake.hitWall()) {
-            fuck();
+            gameOverFlag = true;
         }
+    }
+
+    private void drawScore(Graphics2D g2d, String text) {
+        g2d.setColor(Color.red);
+        g2d.setFont(m_scoreFont);
+        g2d.drawString(text, ScorePosX, ScorePosY);
+    }
+
+    private void drawScore(Graphics2D g2d) {
+        g2d.setFont(m_scoreFont);
+        String s_score = "Score: " + m_score;
+        g2d.drawString(s_score, ScorePosX, ScorePosY);
+    }
+
+    public void paint(Graphics g) {
+        Graphics2D g2d = (Graphics2D) offersetImage.getGraphics();
+
+        checkNode();
+
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setColor(Color.white);
+        g2d.fillRect(0, 0, WIDTH, HEIGHT);
+
+        paintWall(g2d);
         snake.draw(g2d);
-        node.draw(g2d);
-        g.drawImage(offersetImage, 0, 0, null);
+        apple.draw(g2d);
+        if (gameOverFlag) {
+            drawGameOver();
+            g.drawImage(offersetImage, 0, 0, null);
+            gameOver();
+        } else {
+            drawScore(g2d);
+            g.drawImage(offersetImage, 0, 0, null);
+        }
     }
 
     /**
@@ -124,7 +177,7 @@ public class GluttonousSnake extends JFrame {
         x = x / Spacing * Spacing;
         y = y / Spacing * Spacing;
         System.out.println(color.toString() + ' ' + x + ' ' + y);
-        node = new Node(x, y, color);
+        apple = new Node(x, y, color);
     }
 
     /**
@@ -143,6 +196,17 @@ public class GluttonousSnake extends JFrame {
 
     public static void main(String args[]) {
         new GluttonousSnake();
+    }
+
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(SLEEPTIME);
+                repaint();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     class ThreadUpadte implements Runnable {
@@ -202,8 +266,8 @@ class Snake {
 
     public Snake(GluttonousSnake interFace) {
         this.interFace = interFace;
-        nodes.add(new Node(30 + 180, 60 + 180));
-        addNode();
+        nodes.add(new Node(GluttonousSnake.Spacing * 10, GluttonousSnake.Spacing * 5));
+        addNodeFront();
     }
 
     /**
@@ -261,37 +325,24 @@ class Snake {
 
     public void move() {
         nodes.remove((nodes.size() - 1));
-        addNode();
+        addNodeFront();
     }
 
-    public synchronized void addNode() {
+    public synchronized void addNodeFront() {
         Node nodeTempNode = nodes.get(0);
+        final int SPACING = GluttonousSnake.Spacing;
         switch (dir) {
             case GluttonousSnake.L:
-            if (nodeTempNode.x <= 20) {
-                nodeTempNode = new Node(20 + 15 * 50, nodeTempNode.y);
-            }
-            nodes.add(0, new Node(nodeTempNode.x - nodeTempNode.width,
-                nodeTempNode.y));
+            nodes.add(0, new Node(nodeTempNode.x - SPACING, nodeTempNode.y));
             break;
             case GluttonousSnake.R:
-            if (nodeTempNode.x >= 20 + 15 * 50 - nodeTempNode.width) {
-                nodeTempNode = new Node(20 - nodeTempNode.width, nodeTempNode.y);
-            }
-            nodes.add(0, new Node(nodeTempNode.x + nodeTempNode.width,
-                nodeTempNode.y));
+            nodes.add(0, new Node(nodeTempNode.x + SPACING, nodeTempNode.y));
             break;
             case GluttonousSnake.U:
-            if (nodeTempNode.y <= 40) {
-                nodeTempNode = new Node(nodeTempNode.x, 40 + 15 * 35);
-            }
-            nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y - nodeTempNode.height));
+            nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y - SPACING));
             break;
             case GluttonousSnake.D:
-            if (nodeTempNode.y >= 40 + 15 * 35 - nodeTempNode.height) {
-                nodeTempNode = new Node(nodeTempNode.x, 40 - nodeTempNode.height);
-            }
-            nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y + nodeTempNode.height));
+            nodes.add(0, new Node(nodeTempNode.x, nodeTempNode.y + SPACING));
             break;
         }
     }
