@@ -46,6 +46,7 @@ public class GluttonousSnake extends JFrame {
                 System.out.println(arg0.getKeyCode());
                 switch (arg0.getKeyCode()) {
                     case KeyEvent.VK_LEFT:
+                    case KeyEvent.VK_J:
                     if (snake.dir == L) {
                         if (SLEEPTIME > 50) {
                             SLEEPTIME -= 10;
@@ -57,6 +58,7 @@ public class GluttonousSnake extends JFrame {
                     }
                     break;
                     case KeyEvent.VK_RIGHT:
+                    case KeyEvent.VK_L:
                     if (snake.dir == R) {
                         if (SLEEPTIME > 50) {
                             SLEEPTIME -= 10;
@@ -68,6 +70,7 @@ public class GluttonousSnake extends JFrame {
                     }
                     break;
                     case KeyEvent.VK_UP:
+                    case KeyEvent.VK_I:
                     if (snake.dir == U) {
                         if (SLEEPTIME > 50) {
                             SLEEPTIME -= 10;
@@ -79,6 +82,7 @@ public class GluttonousSnake extends JFrame {
                     }
                     break;
                     case KeyEvent.VK_DOWN:
+                    case KeyEvent.VK_K:
                     if (snake.dir == D) {
                         if (SLEEPTIME > 50) {
                             SLEEPTIME -= 10;
